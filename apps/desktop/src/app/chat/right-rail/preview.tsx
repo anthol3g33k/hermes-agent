@@ -113,9 +113,9 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
       requestExitFullscreen()
     }
 
-    window.addEventListener('keydown', onKeyDown, true)
+    window.addEventListener('keydown', onKeyDown)
 
-    return () => window.removeEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown)
   }, [isFullscreen, requestExitFullscreen])
 
   useEffect(() => {

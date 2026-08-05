@@ -87,6 +87,17 @@ describe('ChatPreviewRail fullscreen mode', () => {
     }
   })
 
+  it('lets an open tab menu consume Escape before exiting fullscreen', () => {
+    const rendered = renderPreviewRail()
+    const rail = rendered.container.querySelector('aside')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Enter fullscreen preview' }))
+    fireEvent.contextMenu(screen.getByRole('tab', { name: 'Example Domain' }))
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
+
+    expect(rail?.getAttribute('data-fullscreen')).toBe('true')
+  })
+
   it('exits fullscreen when Electron forwards Escape from the embedded webview', () => {
     let requestExit: () => void = () => undefined
     const previousHermes = window.hermesDesktop
