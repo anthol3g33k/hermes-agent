@@ -52,7 +52,11 @@ function makeOutsideBranchesInert(element: HTMLElement): () => void {
         continue
       }
 
-      restore.push({ element: sibling, hadInert: sibling.hasAttribute('inert'), inertValue: sibling.getAttribute('inert') })
+      restore.push({
+        element: sibling,
+        hadInert: sibling.hasAttribute('inert'),
+        inertValue: sibling.getAttribute('inert')
+      })
       sibling.setAttribute('inert', '')
     }
 
@@ -137,11 +141,7 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.defaultPrevented ||
-        event.key !== 'Escape' ||
-        !isTopEscapeLayer(ESCAPE_PRIORITY.previewFullscreen)
-      ) {
+      if (event.defaultPrevented || event.key !== 'Escape' || !isTopEscapeLayer(ESCAPE_PRIORITY.previewFullscreen)) {
         return
       }
 
