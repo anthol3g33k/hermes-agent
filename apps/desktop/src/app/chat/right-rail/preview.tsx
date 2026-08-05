@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { SetTitlebarToolGroup } from '@/app/shell/titlebar-controls'
 import { Button } from '@/components/ui/button'
@@ -40,6 +40,40 @@ interface ChatPreviewRailProps {
   setTitlebarToolGroup?: SetTitlebarToolGroup
 }
 
+function makeOutsideBranchesInert(element: HTMLElement): () => void {
+  const restore: Array<{ element: HTMLElement; hadInert: boolean; inertValue: string | null }> = []
+  let branch: HTMLElement | null = element
+
+  while (branch?.parentElement) {
+    const parentElement: HTMLElement = branch.parentElement
+
+    for (const sibling of parentElement.children) {
+      if (sibling === branch || !(sibling instanceof HTMLElement)) {
+        continue
+      }
+
+      restore.push({ element: sibling, hadInert: sibling.hasAttribute('inert'), inertValue: sibling.getAttribute('inert') })
+      sibling.setAttribute('inert', '')
+    }
+
+    branch = parentElement
+
+    if (parentElement === document.body) {
+      break
+    }
+  }
+
+  return () => {
+    for (const entry of restore.reverse()) {
+      if (entry.hadInert) {
+        entry.element.setAttribute('inert', entry.inertValue ?? '')
+      } else {
+        entry.element.removeAttribute('inert')
+      }
+    }
+  }
+}
+
 function tabLabelFor(target: PreviewTarget): string {
   // Artifacts are titled, not located — their label is the whole name.
   if (target.kind === 'artifact') {
@@ -60,6 +94,8 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
   const previewTabs = useStore($previewTabs)
   const dirtyPreviewUrls = useStore($dirtyPreviewUrls)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const fullscreenButtonRef = useRef<HTMLButtonElement>(null)
+  const railRef = useRef<HTMLElement>(null)
 
   const exitFullscreen = useCallback(() => setIsFullscreen(false), [])
 
@@ -126,6 +162,23 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
     return window.hermesDesktop?.onPreviewEscapeRequested?.(requestExitFullscreen)
   }, [isFullscreen, requestExitFullscreen])
 
+  useEffect(() => {
+    if (!isFullscreen || !railRef.current) {
+      return
+    }
+
+    const fullscreenButton = fullscreenButtonRef.current
+    const restoreOutsideBranches = makeOutsideBranchesInert(railRef.current)
+
+    return () => {
+      restoreOutsideBranches()
+
+      if (fullscreenButton?.isConnected) {
+        fullscreenButton.focus()
+      }
+    }
+  }, [isFullscreen])
+
   if (!activeTab) {
     return null
   }
@@ -155,6 +208,7 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
         isFullscreen ? 'fixed inset-0 z-(--z-modal) border-0' : panesFlipped ? 'relative border-r' : 'relative border-l'
       )}
       data-fullscreen={isFullscreen}
+      ref={railRef}
       role={isFullscreen ? 'dialog' : undefined}
       // Windows/WSLg paint Electron's Window Controls Overlay across our
       // titlebar band, so the editor-style tab strip (which normally sits IN that
@@ -231,6 +285,7 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
             aria-label={isFullscreen ? t.preview.exitFullscreen : t.preview.enterFullscreen}
             aria-pressed={isFullscreen}
             onClick={() => setIsFullscreen(fullscreen => !fullscreen)}
+            ref={fullscreenButtonRef}
             size="icon-xs"
             type="button"
             variant="ghost"

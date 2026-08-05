@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ESCAPE_PRIORITY, pushEscapeLayer } from '@/lib/escape-layers'
 import { $rightRailActiveTabId } from '@/store/layout'
@@ -20,7 +20,12 @@ function renderPreviewRail() {
   $previewTabs.set([{ id, target }])
   $rightRailActiveTabId.set(id)
 
-  return render(<ChatPreviewRail />)
+  return render(
+    <>
+      <button type="button">Shell action</button>
+      <ChatPreviewRail />
+    </>
+  )
 }
 
 describe('ChatPreviewRail fullscreen mode', () => {
@@ -96,6 +101,50 @@ describe('ChatPreviewRail fullscreen mode', () => {
     fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
 
     expect(rail?.getAttribute('data-fullscreen')).toBe('true')
+  })
+
+  it('makes the covered shell inert and restores focus when fullscreen exits', () => {
+    const rendered = renderPreviewRail()
+    const rail = rendered.container.querySelector('aside')
+    const shellAction = screen.getByRole('button', { name: 'Shell action' })
+    const enterFullscreen = screen.getByRole('button', { name: 'Enter fullscreen preview' })
+
+    enterFullscreen.focus()
+    fireEvent.click(enterFullscreen)
+
+    expect(shellAction.hasAttribute('inert')).toBe(true)
+    expect(rail?.hasAttribute('inert')).toBe(false)
+
+    rendered.container.querySelector<HTMLElement>('webview')?.focus()
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    expect(shellAction.hasAttribute('inert')).toBe(false)
+    expect(window.document.activeElement).toBe(screen.getByRole('button', { name: 'Enter fullscreen preview' }))
+  })
+
+  it('opens the active fullscreen preview URL in the browser', async () => {
+    const previousHermes = window.hermesDesktop
+    const openPreviewInBrowser = vi.fn().mockResolvedValue(true)
+
+    Object.defineProperty(window, 'hermesDesktop', {
+      configurable: true,
+      value: { ...previousHermes, openPreviewInBrowser },
+      writable: true
+    })
+
+    try {
+      renderPreviewRail()
+      fireEvent.click(screen.getByRole('button', { name: 'Enter fullscreen preview' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Open in browser' }))
+
+      await vi.waitFor(() => expect(openPreviewInBrowser).toHaveBeenCalledWith('https://example.com/'))
+    } finally {
+      Object.defineProperty(window, 'hermesDesktop', {
+        configurable: true,
+        value: previousHermes,
+        writable: true
+      })
+    }
   })
 
   it('exits fullscreen when Electron forwards Escape from the embedded webview', () => {

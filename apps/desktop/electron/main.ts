@@ -5506,11 +5506,7 @@ function installDevToolsShortcut(window) {
 
 function installPreviewShortcut(window) {
   window.webContents.on('did-attach-webview', (_event, guest) => {
-    guest.on('before-input-event', (_inputEvent, input) => {
-      if (input.type !== 'keyDown' || input.key !== 'Escape') {
-        return
-      }
-
+    installGuestPreviewEscapeShortcut(guest, () => {
       if (!window.isDestroyed() && !window.webContents.isDestroyed()) {
         window.webContents.send('hermes:preview-escape-requested')
       }
@@ -5537,6 +5533,7 @@ function installPreviewShortcut(window) {
 // survives reloads/restarts) rather than a main-process JSON file. The main
 // process owns setZoomLevel, so we mirror each change into localStorage and
 // read it back on did-finish-load to re-apply after reloads or crash recovery.
+import { installGuestPreviewEscapeShortcut } from './preview-shortcut'
 import {
   applyZoomLevel,
   DEFAULT_ZOOM_LEVEL,
