@@ -109,6 +109,8 @@ describe('ChatPreviewRail fullscreen mode', () => {
     const shellAction = screen.getByRole('button', { name: 'Shell action' })
     const enterFullscreen = screen.getByRole('button', { name: 'Enter fullscreen preview' })
 
+    expect(enterFullscreen.hasAttribute('aria-pressed')).toBe(false)
+
     enterFullscreen.focus()
     fireEvent.click(enterFullscreen)
 

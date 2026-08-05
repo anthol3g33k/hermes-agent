@@ -283,7 +283,6 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
         <Tip label={isFullscreen ? t.preview.exitFullscreen : t.preview.enterFullscreen}>
           <Button
             aria-label={isFullscreen ? t.preview.exitFullscreen : t.preview.enterFullscreen}
-            aria-pressed={isFullscreen}
             onClick={() => setIsFullscreen(fullscreen => !fullscreen)}
             ref={fullscreenButtonRef}
             size="icon-xs"
