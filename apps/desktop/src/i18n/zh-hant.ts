@@ -2329,6 +2329,8 @@ export const zhHant = defineLocale({
     closeToRight: '關閉右側',
     closeAll: '全部關閉',
     closePane: '關閉預覽窗格',
+    enterFullscreen: '以全螢幕顯示預覽',
+    exitFullscreen: '退出全螢幕預覽',
     loading: '正在載入預覽',
     unavailable: '預覽不可用',
     opening: '開啟中...',

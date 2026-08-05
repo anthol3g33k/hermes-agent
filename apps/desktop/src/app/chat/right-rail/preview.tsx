@@ -1,7 +1,8 @@
 import { useStore } from '@nanostores/react'
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { SetTitlebarToolGroup } from '@/app/shell/titlebar-controls'
+import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 import {
   ContextMenu,
@@ -16,6 +17,7 @@ import { translateNow, useI18n } from '@/i18n'
 import { formatCombo } from '@/lib/keybinds/combo'
 import { cn } from '@/lib/utils'
 import { $panesFlipped, $rightRailActiveTabId, selectRightRailTab } from '@/store/layout'
+import { notifyError } from '@/store/notifications'
 import {
   $previewReloadRequest,
   $previewTabs,
@@ -56,6 +58,9 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
   const panesFlipped = useStore($panesFlipped)
   const previewTabs = useStore($previewTabs)
   const dirtyPreviewUrls = useStore($dirtyPreviewUrls)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  const exitFullscreen = useCallback(() => setIsFullscreen(false), [])
 
   const tabs = useMemo(
     () =>
@@ -75,18 +80,60 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
     }
   }, [activeTab, activeTabId])
 
+  useEffect(() => {
+    if (!isFullscreen) {
+      return
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') {
+        return
+      }
+
+      event.preventDefault()
+      exitFullscreen()
+    }
+
+    window.addEventListener('keydown', onKeyDown, true)
+
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [exitFullscreen, isFullscreen])
+
+  useEffect(() => {
+    if (!isFullscreen) {
+      return
+    }
+
+    return window.hermesDesktop?.onPreviewEscapeRequested?.(exitFullscreen)
+  }, [exitFullscreen, isFullscreen])
+
   if (!activeTab) {
     return null
   }
 
   const isPreview = activeTab.target.kind === 'url'
 
+  const openInBrowser = async () => {
+    try {
+      const bridge = window.hermesDesktop?.openPreviewInBrowser ?? window.hermesDesktop?.openExternal
+
+      if (!bridge) {
+        throw new Error('Desktop preview browser bridge is unavailable')
+      }
+
+      await bridge(activeTab.target.url)
+    } catch (error) {
+      notifyError(error, t.preview.unavailable)
+    }
+  }
+
   return (
     <aside
       className={cn(
-        'relative flex h-full w-full min-w-0 flex-col overflow-hidden border-(--ui-stroke-tertiary) bg-(--ui-editor-surface-background) text-(--ui-text-tertiary)',
-        panesFlipped ? 'border-r' : 'border-l'
+        'flex h-full w-full min-w-0 flex-col overflow-hidden border-(--ui-stroke-tertiary) bg-(--ui-editor-surface-background) text-(--ui-text-tertiary)',
+        isFullscreen ? 'fixed inset-0 z-(--z-modal) border-0' : panesFlipped ? 'relative border-r' : 'relative border-l'
       )}
+      data-fullscreen={isFullscreen}
       // Windows/WSLg paint Electron's Window Controls Overlay across our
       // titlebar band, so the editor-style tab strip (which normally sits IN that
       // band) would land under the fixed titlebar tools. --right-rail-top-inset
@@ -144,6 +191,29 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
             )
           })}
         </div>
+        <Tip label={t.preview.openInBrowser}>
+          <Button
+            aria-label={t.preview.openInBrowser}
+            onClick={() => void openInBrowser()}
+            size="icon-xs"
+            type="button"
+            variant="ghost"
+          >
+            <Codicon name="globe" />
+          </Button>
+        </Tip>
+        <Tip label={isFullscreen ? t.preview.exitFullscreen : t.preview.enterFullscreen}>
+          <Button
+            aria-label={isFullscreen ? t.preview.exitFullscreen : t.preview.enterFullscreen}
+            aria-pressed={isFullscreen}
+            onClick={() => setIsFullscreen(fullscreen => !fullscreen)}
+            size="icon-xs"
+            type="button"
+            variant="ghost"
+          >
+            <Codicon name={isFullscreen ? 'screen-normal' : 'screen-full'} />
+          </Button>
+        </Tip>
         <button
           aria-label={t.preview.closePane}
           className="mr-1.5 grid size-6 shrink-0 self-center place-items-center rounded-md text-(--ui-text-tertiary) opacity-0 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-hover/rail-tabs:opacity-100 [-webkit-app-region:no-drag]"

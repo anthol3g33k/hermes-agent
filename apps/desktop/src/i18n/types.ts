@@ -2181,6 +2181,8 @@ export interface Translations {
     closeToRight: string
     closeAll: string
     closePane: string
+    enterFullscreen: string
+    exitFullscreen: string
     loading: string
     unavailable: string
     opening: string

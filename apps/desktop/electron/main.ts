@@ -5505,6 +5505,18 @@ function installDevToolsShortcut(window) {
 }
 
 function installPreviewShortcut(window) {
+  window.webContents.on('did-attach-webview', (_event, guest) => {
+    guest.on('before-input-event', (_inputEvent, input) => {
+      if (input.type !== 'keyDown' || input.key !== 'Escape') {
+        return
+      }
+
+      if (!window.isDestroyed() && !window.webContents.isDestroyed()) {
+        window.webContents.send('hermes:preview-escape-requested')
+      }
+    })
+  })
+
   window.webContents.on('before-input-event', (event, input) => {
     const key = String(input.key || '').toLowerCase()
     const isCloseTabShortcut = key === 'w' && (IS_MAC ? input.meta : input.control) && !input.alt && !input.shift

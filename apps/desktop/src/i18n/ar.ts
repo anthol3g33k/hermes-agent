@@ -2148,6 +2148,8 @@ export const ar = defineLocale({
     closeToRight: 'إغلاق ما على اليمين',
     closeAll: 'إغلاق الكل',
     closePane: 'إغلاق جزء المعاينة',
+    enterFullscreen: 'فتح المعاينة بملء الشاشة',
+    exitFullscreen: 'الخروج من معاينة ملء الشاشة',
     loading: 'جار تحميل المعاينة',
     unavailable: 'المعاينة غير متاحة',
     opening: 'جار الفتح...',

@@ -2582,6 +2582,8 @@ export const en: Translations = {
     closeToRight: 'Close to the right',
     closeAll: 'Close all',
     closePane: 'Close preview pane',
+    enterFullscreen: 'Enter fullscreen preview',
+    exitFullscreen: 'Exit fullscreen preview',
     loading: 'Loading preview',
     unavailable: 'Preview unavailable',
     opening: 'Opening...',

@@ -253,6 +253,7 @@ declare global {
         write: (id: string, data: string) => Promise<boolean>
       }
       onClosePreviewRequested?: (callback: () => void) => () => void
+      onPreviewEscapeRequested?: (callback: () => void) => () => void
       onOpenFolderRequested?: (callback: () => void) => () => void
       onOpenUpdatesRequested?: (callback: () => void) => () => void
       onDeepLink?: (

@@ -2763,6 +2763,8 @@ export const zh: Translations = {
     closeToRight: '关闭右侧',
     closeAll: '全部关闭',
     closePane: '关闭预览面板',
+    enterFullscreen: '全屏显示预览',
+    exitFullscreen: '退出全屏预览',
     loading: '正在加载预览',
     unavailable: '预览不可用',
     opening: '正在打开...',

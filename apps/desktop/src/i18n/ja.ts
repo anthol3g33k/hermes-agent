@@ -2406,6 +2406,8 @@ export const ja = defineLocale({
     closeToRight: '右側を閉じる',
     closeAll: 'すべて閉じる',
     closePane: 'プレビューペインを閉じる',
+    enterFullscreen: 'プレビューを全画面表示',
+    exitFullscreen: 'プレビューの全画面表示を終了',
     loading: 'プレビューを読み込み中',
     unavailable: 'プレビューは利用できません',
     opening: '開いています...',
