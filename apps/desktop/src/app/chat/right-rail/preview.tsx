@@ -14,6 +14,7 @@ import {
 import { PaneTab, PaneTabLabel } from '@/components/ui/pane-tab'
 import { Tip } from '@/components/ui/tooltip'
 import { translateNow, useI18n } from '@/i18n'
+import { ESCAPE_PRIORITY, isTopEscapeLayer, pushEscapeLayer } from '@/lib/escape-layers'
 import { formatCombo } from '@/lib/keybinds/combo'
 import { cn } from '@/lib/utils'
 import { $panesFlipped, $rightRailActiveTabId, selectRightRailTab } from '@/store/layout'
@@ -62,6 +63,12 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
 
   const exitFullscreen = useCallback(() => setIsFullscreen(false), [])
 
+  const requestExitFullscreen = useCallback(() => {
+    if (isTopEscapeLayer(ESCAPE_PRIORITY.previewFullscreen)) {
+      setIsFullscreen(false)
+    }
+  }, [])
+
   const tabs = useMemo(
     () =>
       previewTabs.map(({ id, target }) => {
@@ -85,27 +92,39 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
       return
     }
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') {
-        return
-      }
-
-      event.preventDefault()
-      exitFullscreen()
-    }
-
-    window.addEventListener('keydown', onKeyDown, true)
-
-    return () => window.removeEventListener('keydown', onKeyDown, true)
-  }, [exitFullscreen, isFullscreen])
+    return pushEscapeLayer(ESCAPE_PRIORITY.previewFullscreen)
+  }, [isFullscreen])
 
   useEffect(() => {
     if (!isFullscreen) {
       return
     }
 
-    return window.hermesDesktop?.onPreviewEscapeRequested?.(exitFullscreen)
-  }, [exitFullscreen, isFullscreen])
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.key !== 'Escape' ||
+        !isTopEscapeLayer(ESCAPE_PRIORITY.previewFullscreen)
+      ) {
+        return
+      }
+
+      event.preventDefault()
+      requestExitFullscreen()
+    }
+
+    window.addEventListener('keydown', onKeyDown, true)
+
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [isFullscreen, requestExitFullscreen])
+
+  useEffect(() => {
+    if (!isFullscreen) {
+      return
+    }
+
+    return window.hermesDesktop?.onPreviewEscapeRequested?.(requestExitFullscreen)
+  }, [isFullscreen, requestExitFullscreen])
 
   if (!activeTab) {
     return null

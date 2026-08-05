@@ -22,6 +22,7 @@ export const ESCAPE_PRIORITY = {
   narrowOverlay: 10,
   layoutEdit: 20,
   zoneEditor: 30,
+  previewFullscreen: 35,
   overlay: 40,
   // An in-flight pane drag: Esc means "abort the drag", never ALSO exit edit
   // mode / close the overlay the drag started over. Registered only for the

@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { ESCAPE_PRIORITY, pushEscapeLayer } from '@/lib/escape-layers'
 import { $rightRailActiveTabId } from '@/store/layout'
 import { $previewTabs, previewTabId, type PreviewTarget } from '@/store/preview'
 
@@ -68,6 +69,21 @@ describe('ChatPreviewRail fullscreen mode', () => {
     fireEvent.keyDown(window, { key: 'Escape' })
 
     expect(rail?.getAttribute('data-fullscreen')).toBe('false')
+  })
+
+  it('leaves fullscreen open when a higher-priority overlay owns Escape', () => {
+    const rendered = renderPreviewRail()
+    const rail = rendered.container.querySelector('aside')
+    const removeOverlayLayer = pushEscapeLayer(ESCAPE_PRIORITY.overlay)
+
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Enter fullscreen preview' }))
+      fireEvent.keyDown(window, { key: 'Escape' })
+
+      expect(rail?.getAttribute('data-fullscreen')).toBe('true')
+    } finally {
+      removeOverlayLayer()
+    }
   })
 
   it('exits fullscreen when Electron forwards Escape from the embedded webview', () => {
