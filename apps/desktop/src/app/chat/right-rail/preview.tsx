@@ -148,11 +148,14 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
 
   return (
     <aside
+      aria-label={isFullscreen ? t.preview.tab : undefined}
+      aria-modal={isFullscreen || undefined}
       className={cn(
         'flex h-full w-full min-w-0 flex-col overflow-hidden border-(--ui-stroke-tertiary) bg-(--ui-editor-surface-background) text-(--ui-text-tertiary)',
         isFullscreen ? 'fixed inset-0 z-(--z-modal) border-0' : panesFlipped ? 'relative border-r' : 'relative border-l'
       )}
       data-fullscreen={isFullscreen}
+      role={isFullscreen ? 'dialog' : undefined}
       // Windows/WSLg paint Electron's Window Controls Overlay across our
       // titlebar band, so the editor-style tab strip (which normally sits IN that
       // band) would land under the fixed titlebar tools. --right-rail-top-inset
@@ -210,17 +213,19 @@ export function ChatPreviewRail({ onRestartServer, setTitlebarToolGroup }: ChatP
             )
           })}
         </div>
-        <Tip label={t.preview.openInBrowser}>
-          <Button
-            aria-label={t.preview.openInBrowser}
-            onClick={() => void openInBrowser()}
-            size="icon-xs"
-            type="button"
-            variant="ghost"
-          >
-            <Codicon name="globe" />
-          </Button>
-        </Tip>
+        {isPreview && (
+          <Tip label={t.preview.openInBrowser}>
+            <Button
+              aria-label={t.preview.openInBrowser}
+              onClick={() => void openInBrowser()}
+              size="icon-xs"
+              type="button"
+              variant="ghost"
+            >
+              <Codicon name="globe" />
+            </Button>
+          </Tip>
+        )}
         <Tip label={isFullscreen ? t.preview.exitFullscreen : t.preview.enterFullscreen}>
           <Button
             aria-label={isFullscreen ? t.preview.exitFullscreen : t.preview.enterFullscreen}

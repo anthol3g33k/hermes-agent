@@ -48,7 +48,8 @@ describe('ChatPreviewRail fullscreen mode', () => {
 
     expect(rail?.getAttribute('data-fullscreen')).toBe('true')
     expect(rail?.classList.contains('fixed')).toBe(true)
-    expect(screen.getByRole('button', { name: 'Exit fullscreen preview' })).toBeInstanceOf(HTMLElement)
+    expect(screen.getByRole('dialog', { name: 'Preview' })).toBe(rail)
+    expect(screen.getByRole('button', { name: 'Exit fullscreen preview' })).toBeDefined()
     expect(rendered.container.querySelector('webview')).toBe(webview)
     expect(screen.getByRole('button', { name: 'Open in browser' })).toBeTruthy()
 
